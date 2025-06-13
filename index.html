@@ -1,145 +1,655 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-    <title>PSU Scopus Simple Report 2025</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scopus Publications Analysis Dashboard</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background-color: #4CAF50; color: white; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .total-row { font-weight: bold; background-color: #e6f3ff; }
-        .stats { display: flex; justify-content: space-around; margin: 20px 0; }
-        .stat-box { text-align: center; padding: 15px; background: #f0f0f0; border-radius: 8px; }
-        .stat-number { font-size: 24px; font-weight: bold; color: #333; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2c3e50;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 40px;
+            font-size: 2.8em;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+        
+        h2 {
+            color: #34495e;
+            margin-bottom: 30px;
+            margin-top: 60px;
+            font-size: 2em;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #e74c3c 0%, #f39c12 100%);
+            border-radius: 2px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--color) 0%, var(--color-light) 100%);
+        }
+        
+        .stat-value {
+            font-size: 3em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--color) 0%, var(--color-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+        
+        .coc-card { --color: #e74c3c; --color-light: #ff6b6b; --color-dark: #c0392b; }
+        .fht-card { --color: #f39c12; --color-light: #f1c40f; --color-dark: #d68910; }
+        .fte-card { --color: #27ae60; --color-light: #2ecc71; --color-dark: #229954; }
+        .fis-card { --color: #9b59b6; --color-light: #a569bd; --color-dark: #7d3c98; }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #fff 0%, #fff5f5 100%);
+            border: 2px solid #e74c3c;
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .highlight-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(231,76,60,0.05) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.3; }
+        }
+        
+        .highlight-title {
+            color: #e74c3c;
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        
+        .chart-title {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #2c3e50;
+            font-size: 1.3em;
+        }
+        
+        .bar-chart-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            height: 400px;
+            align-items: flex-end;
+            padding: 20px 10px 60px;
+            position: relative;
+        }
+        
+        .bar-group-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            align-items: flex-end;
+            height: 100%;
+            position: relative;
+        }
+        
+        .bar-item {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            min-height: 20px;
+        }
+        
+        .bar-fill {
+            background: var(--bar-color);
+            border-radius: 8px 8px 0 0;
+            transition: all 0.5s ease;
+            position: relative;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .bar-fill:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .bar-value {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 700;
+            font-size: 0.9em;
+            color: var(--bar-color);
+        }
+        
+        .year-label {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        
+        .bar-coc { --bar-color: #e74c3c; }
+        .bar-fht { --bar-color: #f39c12; }
+        .bar-fte { --bar-color: #27ae60; }
+        .bar-fis { --bar-color: #9b59b6; }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+        
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-container {
+            display: flex;
+            justify-content: center;
+            gap: 80px;
+            align-items: flex-end;
+            height: 350px;
+            margin: 40px 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .comparison-item {
+            text-align: center;
+            position: relative;
+        }
+        
+        .comparison-bar {
+            width: 150px;
+            background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(231,76,60,0.3);
+            overflow: hidden;
+        }
+        
+        .comparison-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+        }
+        
+        .comparison-bar:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 10px 30px rgba(231,76,60,0.4);
+        }
+        
+        .comparison-value {
+            font-size: 3em;
+            font-weight: 700;
+            color: white;
+            padding: 30px 20px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .comparison-label {
+            background: rgba(0,0,0,0.1);
+            width: 100%;
+            padding: 15px;
+            font-size: 1.3em;
+            font-weight: 600;
+            color: white;
+            backdrop-filter: blur(5px);
+        }
+        
+        .change-indicator {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #e74c3c;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .rate-chart {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            padding: 40px;
+            height: 300px;
+            align-items: flex-end;
+        }
+        
+        .rate-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+        }
+        
+        .rate-bar-container {
+            width: 100px;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            position: relative;
+        }
+        
+        .rate-bar-fill {
+            width: 100%;
+            background: var(--rate-color);
+            border-radius: 10px 10px 0 0;
+            position: relative;
+            transition: all 0.5s ease;
+            box-shadow: 0 -2px 15px rgba(0,0,0,0.2);
+        }
+        
+        .rate-bar-fill:hover {
+            transform: translateY(-5px);
+        }
+        
+        .rate-value {
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 700;
+            font-size: 1.2em;
+            color: var(--rate-color);
+        }
+        
+        .rate-label {
+            margin-top: 15px;
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        
+        .rate-coc { --rate-color: #e74c3c; }
+        .rate-fht { --rate-color: #f39c12; }
+        .rate-fte { --rate-color: #27ae60; }
+        .rate-fis { --rate-color: #9b59b6; }
+        
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            color: #95a5a6;
+            font-size: 1em;
+            padding-top: 30px;
+            border-top: 1px solid #ecf0f1;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .bar-chart-grid {
+                grid-template-columns: 1fr;
+                height: auto;
+                gap: 30px;
+            }
+            
+            .comparison-container {
+                flex-direction: column;
+                height: auto;
+                gap: 30px;
+            }
+            
+            .rate-chart {
+                grid-template-columns: repeat(2, 1fr);
+                height: auto;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🎓 PSU Scopus Publications Report</h1>
-            <p>Generated: 6/13/2025, 12:19:02 PM</p>
-        </div>
-        <div class="stats">
-            <div class="stat-box">
-                <div class="stat-number">12</div>
-                <div>Faculties</div>
+        <h1>📊 การวิเคราะห์การตีพิมพ์บทความใน Scopus (2023-2025)</h1>
+        
+        <!-- Summary Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card coc-card">
+                <div class="stat-value">119</div>
+                <div class="stat-label">CoC</div>
             </div>
-            <div class="stat-box">
-                <div class="stat-number">432</div>
-                <div>Total Lecturers</div>
+            <div class="stat-card fht-card">
+                <div class="stat-value">134</div>
+                <div class="stat-label">FHT</div>
             </div>
-            <div class="stat-box">
-                <div class="stat-number">334</div>
-                <div>Total Papers</div>
+            <div class="stat-card fte-card">
+                <div class="stat-value">69</div>
+                <div class="stat-label">FTE</div>
             </div>
-            <div class="stat-box">
-                <div class="stat-number">0.77</div>
-                <div>Avg Papers/Lecturer</div>
+            <div class="stat-card fis-card">
+                <div class="stat-value">12</div>
+                <div class="stat-label">FIS</div>
             </div>
         </div>
         
-        <table>
-            <tr>
-                <th>Faculty Code</th>
-                <th>Faculty Name</th>
-                <th>Lecturers</th>
-                <th>Papers (2025)</th>
-                <th>Papers per Lecturer</th>
-            </tr>
-            <tr>
-                <td>COC</td>
-                <td>College of Computing</td>
-                <td>36</td>
-                <td>40</td>
-                <td>1.11</td>
-            </tr>
-            <tr>
-                <td>FHT</td>
-                <td>Faculty of Hospitality and Tourism</td>
-                <td>32</td>
-                <td>39</td>
-                <td>1.22</td>
-            </tr>
-            <tr>
-                <td>FTE</td>
-                <td>Faculty of Technology and Environment</td>
-                <td>30</td>
-                <td>14</td>
-                <td>0.47</td>
-            </tr>
-            <tr>
-                <td>FIS</td>
-                <td>Faculty of International Studies</td>
-                <td>46</td>
-                <td>4</td>
-                <td>0.09</td>
-            </tr>
-            <tr>
-                <td>COC</td>
-                <td>College of Computing</td>
-                <td>36</td>
-                <td>61</td>
-                <td>1.69</td>
-            </tr>
-            <tr>
-                <td>FHT</td>
-                <td>Faculty of Hospitality and Tourism</td>
-                <td>32</td>
-                <td>51</td>
-                <td>1.59</td>
-            </tr>
-            <tr>
-                <td>FTE</td>
-                <td>Faculty of Technology and Environment</td>
-                <td>30</td>
-                <td>24</td>
-                <td>0.80</td>
-            </tr>
-            <tr>
-                <td>FIS</td>
-                <td>Faculty of International Studies</td>
-                <td>46</td>
-                <td>5</td>
-                <td>0.11</td>
-            </tr>
-            <tr>
-                <td>COC</td>
-                <td>College of Computing</td>
-                <td>36</td>
-                <td>18</td>
-                <td>0.50</td>
-            </tr>
-            <tr>
-                <td>FHT</td>
-                <td>Faculty of Hospitality and Tourism</td>
-                <td>32</td>
-                <td>44</td>
-                <td>1.38</td>
-            </tr>
-            <tr>
-                <td>FTE</td>
-                <td>Faculty of Technology and Environment</td>
-                <td>30</td>
-                <td>31</td>
-                <td>1.03</td>
-            </tr>
-            <tr>
-                <td>FIS</td>
-                <td>Faculty of International Studies</td>
-                <td>46</td>
-                <td>3</td>
-                <td>0.07</td>
-            </tr>
-            <tr class="total-row">
-                <td>TOTAL</td>
-                <td>All Faculties</td>
-                <td>432</td>
-                <td>334</td>
-                <td>0.77</td>
-            </tr>
-        </table>
+        <!-- CoC Performance Highlight -->
+        <div class="highlight-box">
+            <div class="highlight-title">🚀 การตีพิมพ์ College of Computing (3 ปีย้อนหลัง)</div>
+            <br><br>
+            <div class="comparison-container">
+                
+      <div class="comparison-item">
+        <div class="change-indicator">📈</div>
+        <div class="comparison-bar" style="height: 103.27868852459017px;">
+          <div class="comparison-value">18</div>
+          <div class="comparison-label">ปี 2023</div>
+        </div>
+      </div>
+    
+      <div class="comparison-item">
+        <div class="change-indicator">📈</div>
+        <div class="comparison-bar" style="height: 350px;">
+          <div class="comparison-value">61</div>
+          <div class="comparison-label">ปี 2024</div>
+        </div>
+      </div>
+    
+      <div class="comparison-item">
+        <div class="change-indicator">📈</div>
+        <div class="comparison-bar" style="height: 229.50819672131146px;">
+          <div class="comparison-value">40</div>
+          <div class="comparison-label">ปี 2025</div>
+        </div>
+      </div>
+    
+            </div>
+            <p style="text-align: center; margin-top: 30px; color: #555; font-size: 1.1em; position: relative; z-index: 1;">
+                จำนวนบทความ นับถึงวันที่ 13/6/2568 และ มีบทความมีแนวโน้มเพิ่มขึ้นต่อเนื่อง
+            </p>
+        </div>
+        
+        <h2>📈 จำนวนบทความแยกตามปี (Group by Year)</h2>
+        <div class="chart-container">
+            <div class="chart-title">จำนวนบทความที่ตีพิมพ์ในแต่ละปี จำแนกตามคณะ</div>
+            <div class="bar-chart-grid">
+                
+      <div class="bar-group-grid">
+        
+        <div class="bar-item">
+          <div class="bar-fill bar-coc" style="height: 88.52459016393442px;">
+            <div class="bar-value">18</div>
+          </div>
+        </div>
+      
+        <div class="bar-item">
+          <div class="bar-fill bar-fht" style="height: 216.39344262295083px;">
+            <div class="bar-value">44</div>
+          </div>
+        </div>
+      
+        <div class="bar-item">
+          <div class="bar-fill bar-fte" style="height: 152.45901639344262px;">
+            <div class="bar-value">31</div>
+          </div>
+        </div>
+      
+        <div class="bar-item">
+          <div class="bar-fill bar-fis" style="height: 14.754098360655737px;">
+            <div class="bar-value">3</div>
+          </div>
+        </div>
+      
+        <div class="year-label">2023</div>
+      </div>
+    
+      <div class="bar-group-grid">
+        
+        <div class="bar-item">
+          <div class="bar-fill bar-coc" style="height: 300px;">
+            <div class="bar-value">61</div>
+          </div>
+        </div>
+      
+        <div class="bar-item">
+          <div class="bar-fill bar-fht" style="height: 250.81967213114754px;">
+            <div class="bar-value">51</div>
+          </div>
+        </div>
+      
+        <div class="bar-item">
+          <div class="bar-fill bar-fte" style="height: 118.0327868852459px;">
+            <div class="bar-value">24</div>
+          </div>
+        </div>
+      
+        <div class="bar-item">
+          <div class="bar-fill bar-fis" style="height: 24.59016393442623px;">
+            <div class="bar-value">5</div>
+          </div>
+        </div>
+      
+        <div class="year-label">2024</div>
+      </div>
+    
+      <div class="bar-group-grid">
+        
+        <div class="bar-item">
+          <div class="bar-fill bar-coc" style="height: 196.72131147540983px;">
+            <div class="bar-value">40</div>
+          </div>
+        </div>
+      
+        <div class="bar-item">
+          <div class="bar-fill bar-fht" style="height: 191.8032786885246px;">
+            <div class="bar-value">39</div>
+          </div>
+        </div>
+      
+        <div class="bar-item">
+          <div class="bar-fill bar-fte" style="height: 68.85245901639344px;">
+            <div class="bar-value">14</div>
+          </div>
+        </div>
+      
+        <div class="bar-item">
+          <div class="bar-fill bar-fis" style="height: 19.672131147540984px;">
+            <div class="bar-value">4</div>
+          </div>
+        </div>
+      
+        <div class="year-label">2025</div>
+      </div>
+    
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #e74c3c;"></div>
+                    <span>CoC</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #f39c12;"></div>
+                    <span>FHT</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #27ae60;"></div>
+                    <span>FTE</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #9b59b6;"></div>
+                    <span>FIS</span>
+                </div>
+            </div>
+        </div>
+        
+        <h2>📉 อัตราการตีพิมพ์ต่ออาจารย์ (ปี 2025)</h2>
+        <div class="chart-container">
+            <div class="chart-title">สัดส่วนบทความต่อจำนวนอาจารย์ในแต่ละคณะ</div>
+            <div class="rate-chart">
+                
+      <div class="rate-item">
+        <div class="rate-bar-container">
+          <div class="rate-bar-fill rate-coc" style="height: 90.98360655737706%;">
+            <div class="rate-value">1.11</div>
+          </div>
+        </div>
+        <div class="rate-label">COC</div>
+      </div>
+    
+      <div class="rate-item">
+        <div class="rate-bar-container">
+          <div class="rate-bar-fill rate-fht" style="height: 100%;">
+            <div class="rate-value">1.22</div>
+          </div>
+        </div>
+        <div class="rate-label">FHT</div>
+      </div>
+    
+      <div class="rate-item">
+        <div class="rate-bar-container">
+          <div class="rate-bar-fill rate-fte" style="height: 38.52459016393443%;">
+            <div class="rate-value">0.47</div>
+          </div>
+        </div>
+        <div class="rate-label">FTE</div>
+      </div>
+    
+      <div class="rate-item">
+        <div class="rate-bar-container">
+          <div class="rate-bar-fill rate-fis" style="height: 7.377049180327869%;">
+            <div class="rate-value">0.09</div>
+          </div>
+        </div>
+        <div class="rate-label">FIS</div>
+      </div>
+    
+            </div>
+            <p style="text-align: center; margin-top: 20px; color: #666; font-size: 1.05em;">
+                * อัตราการตีพิมพ์ = จำนวนบทความ ÷ จำนวนอาจารย์ในคณะ
+            </p>
+        </div>
+        
+        <div class="footer">
+            Last updated: 13/06/2025
+        </div>
     </div>
 </body>
 </html>
