@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scopus Publications Analysis Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2c3e50;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 40px;
+            font-size: 2.8em;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+        
+        h2 {
+            color: #34495e;
+            margin-bottom: 30px;
+            margin-top: 60px;
+            font-size: 2em;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #e74c3c 0%, #f39c12 100%);
+            border-radius: 2px;
+        }
+        
+        /* Modern Card Design */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--color) 0%, var(--color-light) 100%);
+        }
+        
+        .stat-value {
+            font-size: 3em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--color) 0%, var(--color-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+        
+        .coc-card { --color: #e74c3c; --color-light: #ff6b6b; --color-dark: #c0392b; }
+        .fht-card { --color: #f39c12; --color-light: #f1c40f; --color-dark: #d68910; }
+        .fte-card { --color: #27ae60; --color-light: #2ecc71; --color-dark: #229954; }
+        .fis-card { --color: #9b59b6; --color-light: #a569bd; --color-dark: #7d3c98; }
+        
+        /* Highlight Box */
+        .highlight-box {
+            background: linear-gradient(135deg, #fff 0%, #fff5f5 100%);
+            border: 2px solid #e74c3c;
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .highlight-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(231,76,60,0.05) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.3; }
+        }
+        
+        .highlight-title {
+            color: #e74c3c;
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Modern Bar Chart */
+        .chart-container {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        
+        .chart-title {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #2c3e50;
+            font-size: 1.3em;
+        }
+        
+        /* Bar Chart with CSS Grid */
+        .bar-chart-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            height: 400px;
+            align-items: flex-end;
+            padding: 20px 10px 60px;
+            position: relative;
+        }
+        
+        .bar-group-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            align-items: flex-end;
+            height: 100%;
+            position: relative;
+        }
+        
+        .bar-item {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            min-height: 20px;
+        }
+        
+        .bar-fill {
+            background: var(--bar-color);
+            border-radius: 8px 8px 0 0;
+            transition: all 0.5s ease;
+            position: relative;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .bar-fill:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .bar-value {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 700;
+            font-size: 0.9em;
+            color: var(--bar-color);
+        }
+        
+        .year-label {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        
+        /* Bar colors */
+        .bar-coc { --bar-color: #e74c3c; }
+        .bar-fht { --bar-color: #f39c12; }
+        .bar-fte { --bar-color: #27ae60; }
+        .bar-fis { --bar-color: #9b59b6; }
+        
+        /* Legend */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+        
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        /* Comparison Bars */
+        .comparison-container {
+            display: flex;
+            justify-content: center;
+            gap: 80px;
+            align-items: flex-end;
+            height: 350px;
+            margin: 40px 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .comparison-item {
+            text-align: center;
+            position: relative;
+        }
+        
+        .comparison-bar {
+            width: 150px;
+            background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(231,76,60,0.3);
+            overflow: hidden;
+        }
+        
+        .comparison-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+        }
+        
+        .comparison-bar:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 10px 30px rgba(231,76,60,0.4);
+        }
+        
+        .comparison-value {
+            font-size: 3em;
+            font-weight: 700;
+            color: white;
+            padding: 30px 20px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .comparison-label {
+            background: rgba(0,0,0,0.1);
+            width: 100%;
+            padding: 15px;
+            font-size: 1.3em;
+            font-weight: 600;
+            color: white;
+            backdrop-filter: blur(5px);
+        }
+        
+        .change-indicator {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #e74c3c;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* Line Chart */
+        .line-chart-container {
+            position: relative;
+            height: 400px;
+            padding: 20px;
+        }
+        
+        .line-chart-svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Rate Chart */
+        .rate-chart {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            padding: 40px;
+            height: 300px;
+            align-items: flex-end;
+        }
+        
+        .rate-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+        }
+        
+        .rate-bar-container {
+            width: 100px;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            position: relative;
+        }
+        
+        .rate-bar-fill {
+            width: 100%;
+            background: var(--rate-color);
+            border-radius: 10px 10px 0 0;
+            position: relative;
+            transition: all 0.5s ease;
+            box-shadow: 0 -2px 15px rgba(0,0,0,0.2);
+        }
+        
+        .rate-bar-fill:hover {
+            transform: translateY(-5px);
+        }
+        
+        .rate-value {
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 700;
+            font-size: 1.2em;
+            color: var(--rate-color);
+        }
+        
+        .rate-label {
+            margin-top: 15px;
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        
+        .rate-coc { --rate-color: #e74c3c; }
+        .rate-fht { --rate-color: #f39c12; }
+        .rate-fte { --rate-color: #27ae60; }
+        .rate-fis { --rate-color: #9b59b6; }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            color: #95a5a6;
+            font-size: 1em;
+            padding-top: 30px;
+            border-top: 1px solid #ecf0f1;
+            font-weight: 500;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .bar-chart-grid {
+                grid-template-columns: 1fr;
+                height: auto;
+                gap: 30px;
+            }
+            
+            .comparison-container {
+                flex-direction: column;
+                height: auto;
+                gap: 30px;
+            }
+            
+            .rate-chart {
+                grid-template-columns: repeat(2, 1fr);
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 การวิเคราะห์การตีพิมพ์บทความใน Scopus (2021-2025)</h1>
+        
+        <!-- Summary Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card coc-card">
+                <div class="stat-value">131</div>
+                <div class="stat-label">CoC</div>
+            </div>
+            <div class="stat-card fht-card">
+                <div class="stat-value">177</div>
+                <div class="stat-label">FHT</div>
+            </div>
+            <div class="stat-card fte-card">
+                <div class="stat-value">122</div>
+                <div class="stat-label">FTE</div>
+            </div>
+            <div class="stat-card fis-card">
+                <div class="stat-value">20</div>
+                <div class="stat-label">FIS</div>
+            </div>
+        </div>
+        
+        <!-- CoC Performance Highlight -->
+        <div class="highlight-box">
+            <div class="highlight-title">🚀 การตีพิมพ์ College of Computing (3 ปีย้อนหลัง)</div>
+            <br> <br>
+            <div class="comparison-container">
+                <div class="comparison-item">
+                    <div class="change-indicator">📈</div>
+                    <div class="comparison-bar" style="height: 175px;">
+                        <div class="comparison-value">18</div>
+                        <div class="comparison-label">ปี 2023</div>
+                    </div>
+                </div>
+                <div class="comparison-item">
+                    <div class="change-indicator">📈</div>
+                    <div class="comparison-bar" style="height: 395px;">
+                        <div class="comparison-value">62</div>
+                        <div class="comparison-label">ปี 2024</div>
+                    </div>
+                </div>
+                <div class="comparison-item">
+                    <div class="change-indicator">📈</div>
+                    <div class="comparison-bar" style="height: 260px;">
+                        <div class="comparison-value">39</div>
+                        <div class="comparison-label">ปี 2025</div>
+                    </div>
+                </div>
+            </div>
+            <p style="text-align: center; margin-top: 30px; color: #555; font-size: 1.1em; position: relative; z-index: 1;">
+                จำนวนบทความ นับถึงวันที่ 11 มิถุนายน 2568 และ มีบทความมีแนวโน้มเพิ่มขึ้นต่อเนื่อง
+            </p>
+        </div>
+        
+        <h2>📈 จำนวนบทความแยกตามปี (Group by Year)</h2>
+        <div class="chart-container">
+            <div class="chart-title">จำนวนบทความที่ตีพิมพ์ในแต่ละปี จำแนกตามคณะ</div>
+            <div class="bar-chart-grid">
+                <!-- 2021 -->
+                <div class="bar-group-grid">
+                    <div class="bar-item">
+                        <div class="bar-fill bar-coc" style="height: 10px;">
+                            <div class="bar-value">2</div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-fill bar-fht" style="height: 60px;">
+                            <div class="bar-value">12</div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-fill bar-fte" style="height: 105px;">
+                            <div class="bar-value">21</div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-fill bar-fis" style="height: 5px;">
+                            <div class="bar-value">1</div>
+                        </div>
+                    </div>
+                    <div class="year-label">2021</div>
+                </div>
+                
+                <!-- 2022 -->
+                <div class="bar-group-grid">
+                    <div class="bar-item">
+                        <div class="bar-fill bar-coc" style="height: 50px;">
+                            <div class="bar-value">10</div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-fill bar-fht" style="height: 140px;">
+                            <div class="bar-value">28</div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-fill bar-fte" style="height: 160px;">
+                            <div class="bar-value">32</div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-fill bar-fis" style="height: 30px;">
+                            <div class="bar-value">6</div>
+                        </div>
+                    </div>
+                    <div class="year-label">2022</div>
+                </div>
+                
+                <!-- 2023 -->
+                <div class="bar-group-grid">
+                    <div class="bar-item">
+                        <div class="bar-fill bar-coc" style="height: 90px;">
+                            <div class="bar-value">18</div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-fill bar-fht" style="height: 235px;">
+                            <div class="bar-value">47</div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-fill bar-fte" style="height: 155px;">
+                            <div class="bar-value">31</div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-fill bar-fis" style="height: 15px;">
+                            <div class="bar-value">3</div>
+                        </div>
+                    </div>
+                    <div class="year-label">2023</div>
+                </div>
+                
+                <!-- 2024 -->
+                <div class="bar-group-grid">
+                    <div class="bar-item">
+                        <div class="bar-fill bar-coc" style="height: 310px;">
+                            <div class="bar-value">62</div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-fill bar-fht" style="height: 260px;">
+                            <div class="bar-value">52</div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-fill bar-fte" style="height: 120px;">
+                            <div class="bar-value">24</div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-fill bar-fis" style="height: 30px;">
+                            <div class="bar-value">6</div>
+                        </div>
+                    </div>
+                    <div class="year-label">2024</div>
+                </div>
+                
+                <!-- 2025 -->
+                <div class="bar-group-grid">
+                    <div class="bar-item">
+                        <div class="bar-fill bar-coc" style="height: 195px;">
+                            <div class="bar-value">39</div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-fill bar-fht" style="height: 190px;">
+                            <div class="bar-value">38</div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-fill bar-fte" style="height: 70px;">
+                            <div class="bar-value">14</div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-fill bar-fis" style="height: 20px;">
+                            <div class="bar-value">4</div>
+                        </div>
+                    </div>
+                    <div class="year-label">2025</div>
+                </div>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #e74c3c;"></div>
+                    <span>CoC</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #f39c12;"></div>
+                    <span>FHT</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #27ae60;"></div>
+                    <span>FTE</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #9b59b6;"></div>
+                    <span>FIS</span>
+                </div>
+            </div>
+        </div>
+        
+        <h2>📊 แนวโน้มการตีพิมพ์แยกตามคณะ (Group by Faculty)</h2>
+        <div class="chart-container">
+            <div class="chart-title">แนวโน้มการตีพิมพ์บทความของแต่ละคณะ (2021-2025)</div>
+            <div class="line-chart-container">
+                <svg class="line-chart-svg" viewBox="0 0 800 400">
+                    <!-- Grid -->
+                    <defs>
+                        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#f0f0f0" stroke-width="1"/>
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid)" />
+                    
+                    <!-- Axes -->
+                    <line x1="80" y1="20" x2="80" y2="320" stroke="#333" stroke-width="2"/>
+                    <line x1="80" y1="320" x2="720" y2="320" stroke="#333" stroke-width="2"/>
+                    
+                    <!-- Y-axis labels -->
+                    <g font-size="14" fill="#666" font-weight="500">
+                        <text x="70" y="325" text-anchor="end">0</text>
+                        <text x="70" y="245" text-anchor="end">20</text>
+                        <text x="70" y="165" text-anchor="end">40</text>
+                        <text x="70" y="85" text-anchor="end">60</text>
+                    </g>
+                    
+                    <!-- X-axis labels -->
+                    <g font-size="14" fill="#666" font-weight="600">
+                        <text x="160" y="350" text-anchor="middle">2021</text>
+                        <text x="320" y="350" text-anchor="middle">2022</text>
+                        <text x="480" y="350" text-anchor="middle">2023</text>
+                        <text x="640" y="350" text-anchor="middle">2024</text>
+                        <text x="720" y="350" text-anchor="middle">2025</text>
+                    </g>
+                    
+                    <!-- CoC line -->
+                    <g>
+                        <path d="M 160,316 L 320,300 L 480,276 L 640,96 L 720,176" 
+                              fill="none" stroke="#e74c3c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <g fill="#e74c3c">
+                            <circle cx="160" cy="316" r="8"/>
+                            <circle cx="320" cy="300" r="8"/>
+                            <circle cx="480" cy="276" r="8"/>
+                            <circle cx="640" cy="96" r="8"/>
+                            <circle cx="720" cy="176" r="8"/>
+                        </g>
+                    </g>
+                    
+                    <!-- FHT line -->
+                    <g>
+                        <path d="M 160,296 L 320,244 L 480,132 L 640,124 L 720,178" 
+                              fill="none" stroke="#f39c12" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+                        <g fill="#f39c12">
+                            <circle cx="160" cy="296" r="6"/>
+                            <circle cx="320" cy="244" r="6"/>
+                            <circle cx="480" cy="132" r="6"/>
+                            <circle cx="640" cy="124" r="6"/>
+                            <circle cx="720" cy="178" r="6"/>
+                        </g>
+                    </g>
+                    
+                    <!-- FTE line -->
+                    <g>
+                        <path d="M 160,276 L 320,224 L 480,204 L 640,244 L 720,284" 
+                              fill="none" stroke="#27ae60" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+                        <g fill="#27ae60">
+                            <circle cx="160" cy="276" r="6"/>
+                            <circle cx="320" cy="224" r="6"/>
+                            <circle cx="480" cy="204" r="6"/>
+                            <circle cx="640" cy="244" r="6"/>
+                            <circle cx="720" cy="284" r="6"/>
+                        </g>
+                    </g>
+                    
+                    <!-- FIS line -->
+                    <g>
+                        <path d="M 160,318 L 320,308 L 480,312 L 640,308 L 720,312" 
+                              fill="none" stroke="#9b59b6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+                        <g fill="#9b59b6">
+                            <circle cx="160" cy="318" r="6"/>
+                            <circle cx="320" cy="308" r="6"/>
+                            <circle cx="480" cy="312" r="6"/>
+                            <circle cx="640" cy="308" r="6"/>
+                            <circle cx="720" cy="312" r="6"/>
+                        </g>
+                    </g>
+                </svg>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #e74c3c;"></div>
+                    <span>CoC</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #f39c12;"></div>
+                    <span>FHT</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #27ae60;"></div>
+                    <span>FTE</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #9b59b6;"></div>
+                    <span>FIS</span>
+                </div>
+            </div>
+        </div>
+        
+        <h2>📉 อัตราการตีพิมพ์ต่ออาจารย์ (ปี 2025)</h2>
+        <div class="chart-container">
+            <div class="chart-title">สัดส่วนบทความต่อจำนวนอาจารย์ในแต่ละคณะ</div>
+            <div class="rate-chart">
+                <div class="rate-item">
+                    <div class="rate-bar-container">
+                        <div class="rate-bar-fill rate-coc" style="height: 91%;">
+                            <div class="rate-value">1.08</div>
+                        </div>
+                    </div>
+                    <div class="rate-label">CoC</div>
+                </div>
+                <div class="rate-item">
+                    <div class="rate-bar-container">
+                        <div class="rate-bar-fill rate-fht" style="height: 100%;">
+                            <div class="rate-value">1.19</div>
+                        </div>
+                    </div>
+                    <div class="rate-label">FHT</div>
+                </div>
+                <div class="rate-item">
+                    <div class="rate-bar-container">
+                        <div class="rate-bar-fill rate-fte" style="height: 39%;">
+                            <div class="rate-value">0.47</div>
+                        </div>
+                    </div>
+                    <div class="rate-label">FTE</div>
+                </div>
+                <div class="rate-item">
+                    <div class="rate-bar-container">
+                        <div class="rate-bar-fill rate-fis" style="height: 8%;">
+                            <div class="rate-value">0.09</div>
+                        </div>
+                    </div>
+                    <div class="rate-label">FIS</div>
+                </div>
+            </div>
+            <p style="text-align: center; margin-top: 20px; color: #666; font-size: 1.05em;">
+                * อัตราการตีพิมพ์ = จำนวนบทความ ÷ จำนวนอาจารย์ในคณะ
+            </p>
+        </div>
+        
+        <div class="chart-container">
+            <div>
+                Sign in Scopus.com go to Advance Search: 
+                https://www.scopus.com/search/form.uri?display=advanced
+            </div>
+            <br>
+            <div> 
+                ALL ( "College of Computing" )  AND  ALL ( "Prince of Songkla University" )  AND NOT  DOCTYPE ( cp )  AND  ( LIMIT-TO ( PUBYEAR ,  2025 )  OR  LIMIT-TO ( PUBYEAR ,  2024 )  OR  LIMIT-TO ( PUBYEAR ,  2023 )  OR  LIMIT-TO ( PUBYEAR ,  2022 )  OR  LIMIT-TO ( PUBYEAR ,  2021 )  OR  LIMIT-TO ( PUBYEAR ,  2020 ) )
+            </div>
+
+        </div>
+
+        <div class="footer">
+            Last updated: 11 June 2025
+        </div>
+    </div>
+</body>
+</html>
