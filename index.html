@@ -332,6 +332,66 @@
             gap: 5px;
         }
         
+        .rate-chart {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            padding: 40px;
+            height: 300px;
+            align-items: flex-end;
+        }
+        
+        .rate-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+        }
+        
+        .rate-bar-container {
+            width: 100px;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            position: relative;
+        }
+        
+        .rate-bar-fill {
+            width: 100%;
+            background: var(--rate-color);
+            border-radius: 10px 10px 0 0;
+            position: relative;
+            transition: all 0.5s ease;
+            box-shadow: 0 -2px 15px rgba(0,0,0,0.2);
+        }
+        
+        .rate-bar-fill:hover {
+            transform: translateY(-5px);
+        }
+        
+        .rate-value {
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 700;
+            font-size: 1.2em;
+            color: var(--rate-color);
+        }
+        
+        .rate-label {
+            margin-top: 15px;
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        
+        .rate-coc { --rate-color: #e74c3c; }
+        .rate-fht { --rate-color: #f39c12; }
+        .rate-fte { --rate-color: #27ae60; }
+        .rate-fis { --rate-color: #9b59b6; }
+        
         .footer {
             text-align: center;
             margin-top: 60px;
@@ -357,6 +417,11 @@
                 flex-direction: column;
                 height: auto;
                 gap: 30px;
+            }
+            
+            .rate-chart {
+                grid-template-columns: repeat(2, 1fr);
+                height: auto;
             }
         }
     </style>
@@ -650,9 +715,53 @@
                 * อัตราการตีพิมพ์ = จำนวนบทความ ÷ จำนวนอาจารย์ในคณะ
             </p>
         </div>
+
+        <h2>👥 จำนวนอาจารย์ในแต่ละคณะ (ปี 2026)</h2>
+        <div class="chart-container">
+            <div class="chart-title">จำนวนอาจารย์จำแนกตามคณะ</div>
+            <div class="rate-chart">
+                
+      <div class="rate-item">
+        <div class="rate-bar-container">
+          <div class="rate-bar-fill rate-coc" style="height: 76.08695652173914%;">
+            <div class="rate-value">35</div>
+          </div>
+        </div>
+        <div class="rate-label">COC</div>
+      </div>
+    
+      <div class="rate-item">
+        <div class="rate-bar-container">
+          <div class="rate-bar-fill rate-fht" style="height: 69.56521739130434%;">
+            <div class="rate-value">32</div>
+          </div>
+        </div>
+        <div class="rate-label">FHT</div>
+      </div>
+    
+      <div class="rate-item">
+        <div class="rate-bar-container">
+          <div class="rate-bar-fill rate-fte" style="height: 65.21739130434783%;">
+            <div class="rate-value">30</div>
+          </div>
+        </div>
+        <div class="rate-label">FTE</div>
+      </div>
+    
+      <div class="rate-item">
+        <div class="rate-bar-container">
+          <div class="rate-bar-fill rate-fis" style="height: 100%;">
+            <div class="rate-value">46</div>
+          </div>
+        </div>
+        <div class="rate-label">FIS</div>
+      </div>
+    
+            </div>
+        </div>
         
         <div class="footer">
-            Last updated: 24/06/2026, 16:32:26 
+            Last updated: 24/06/2026, 20:11:07 
         </div>
     </div>
 </body>
